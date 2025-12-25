@@ -10,13 +10,6 @@
  *   SANITY_API_TOKEN=your_write_token (with Editor permissions)
  */
 
-// Load environment variables from .env.local
-require('dotenv').config({ path: '.env.local' })
-
-const { createClient } = require('@sanity/client')
-const https = require('https')
-const http = require('http')
-
 // Get environment variables
 const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID
 const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || 'production'

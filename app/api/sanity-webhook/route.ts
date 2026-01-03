@@ -5,14 +5,11 @@ import { client } from "@/sanity/lib/client";
 // Import the Steadfast API utility we'll create next
 import { createSteadfastOrder } from "@/lib/steadfast/api";
 
-// Store webhook secret in environment variable
-const WEBHOOK_SECRET = process.env.SANITY_WEBHOOK_SECRET;
-
 export async function POST(request: NextRequest) {
   try {
     // 1. Verify webhook signature (basic check)
     const secret = request.nextUrl.searchParams.get("secret");
-    const expectedSecret = process.env.SANITY_REVALIDATE_SECRET;
+    const expectedSecret = process.env.SANITY_WEBHOOK_SECRET;
     if (!expectedSecret) {
       return NextResponse.json(
         { error: "Server misconfiguration" },

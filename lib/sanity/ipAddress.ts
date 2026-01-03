@@ -9,6 +9,10 @@ export async function ordersFromIPLast24h(ip: string) {
     ])
   `;
 
-  const count = await client.fetch(query, { ip }, { next: { revalidate: 0 } });
+  const count = await client.fetch(
+    query,
+    { ip },
+    { cache: "no-store", next: { tags: ["orders"] } }
+  );
   return count;
 }

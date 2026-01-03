@@ -17,6 +17,7 @@ export async function POST(request: NextRequest) {
       );
     }
     if (secret !== expectedSecret) {
+      console.log(secret);
       return NextResponse.json({ error: "Invalid secret" }, { status: 401 });
     }
 

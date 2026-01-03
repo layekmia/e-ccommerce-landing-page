@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
 
     const ipOrderCount = await ordersFromIPLast24h(ip);
 
-    if (ipOrderCount >= 2) {
+    if (ipOrderCount >= 1) {
       return NextResponse.json(
         {
           error:

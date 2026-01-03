@@ -10,6 +10,5 @@ export async function ordersFromIPLast24h(ip: string) {
   `;
 
   const count = await client.fetch(query, { ip });
-  console.log(`[Rate Limit] IP: ${ip}, Orders in last 24h: ${count}`);
   return count;
 }

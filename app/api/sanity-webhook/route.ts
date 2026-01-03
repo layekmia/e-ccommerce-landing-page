@@ -12,8 +12,9 @@ export async function POST(request: NextRequest) {
   try {
     // 1. Verify webhook signature (basic check)
     const authHeader = request.headers.get("authorization");
+    console.log(authHeader);
     if (!authHeader || authHeader !== `Bearer ${WEBHOOK_SECRET}`) {
-      console.error("Webhook unauthorized");
+      console.error("Webhook unauthorized", authHeader);
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

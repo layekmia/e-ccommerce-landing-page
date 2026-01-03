@@ -11,15 +11,16 @@ const WEBHOOK_SECRET = process.env.SANITY_WEBHOOK_SECRET;
 export async function POST(request: NextRequest) {
   try {
     // 1. Verify webhook signature (basic check)
-    const sanitySecret = request.headers.get("x-sanity-secret");
-    if (!sanitySecret || sanitySecret !== WEBHOOK_SECRET) {
-      console.error(
-        "Webhook unauthorized. Received:",
-        sanitySecret,
-        "Expected:",
-        WEBHOOK_SECRET
+    const secret = request.nextUrl.searchParams.get("secret");
+    const expectedSecret = process.env.SANITY_REVALIDATE_SECRET;
+    if (!expectedSecret) {
+      return NextResponse.json(
+        { error: "Server misconfiguration" },
+        { status: 500 }
       );
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    if (secret !== expectedSecret) {
+      return NextResponse.json({ error: "Invalid secret" }, { status: 401 });
     }
 
     // 2. Parse the webhook payload

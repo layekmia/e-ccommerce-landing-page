@@ -11,10 +11,14 @@ const WEBHOOK_SECRET = process.env.SANITY_WEBHOOK_SECRET;
 export async function POST(request: NextRequest) {
   try {
     // 1. Verify webhook signature (basic check)
-    const authHeader = request.headers.get("authorization");
-    console.log(authHeader);
-    if (!authHeader || authHeader !== `Bearer ${WEBHOOK_SECRET}`) {
-      console.error("Webhook unauthorized", authHeader);
+    const sanitySecret = request.headers.get("x-sanity-secret");
+    if (!sanitySecret || sanitySecret !== WEBHOOK_SECRET) {
+      console.error(
+        "Webhook unauthorized. Received:",
+        sanitySecret,
+        "Expected:",
+        WEBHOOK_SECRET
+      );
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

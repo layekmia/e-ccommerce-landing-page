@@ -1,5 +1,5 @@
-import { client } from '@/sanity/lib/client'
-import { Product } from '@/types/product'
+import { client } from "@/sanity/lib/client";
+import { Product } from "@/types/product";
 
 /**
  * GROQ query to fetch product data from Sanity
@@ -28,31 +28,42 @@ const productQuery = `*[_type == "product" && _id == "product"][0] {
   codEnabled,
   codText,
   freeDeliveryText
-}`
+}`;
 
 /**
  * Fetch product data from Sanity CMS
  */
 export async function getProduct(): Promise<Product | null> {
   try {
-    const data = await client.fetch(productQuery)
-    
+    const timestamp = Date.now();
+    const data = await client.fetch(
+      productQuery,
+      { timestamp },
+      {
+        cache: "no-store",
+        next: { revalidate: 0 },
+        perspective: "previewDrafts", // Use preview perspective for fresh data
+      }
+    );
+
     if (!data) {
-      console.warn('No product found in Sanity. Make sure to seed your product data.')
-      return null
+      console.warn(
+        "No product found in Sanity. Make sure to seed your product data."
+      );
+      return null;
     }
 
     // Transform Sanity data to match Product interface
     // The structure should already match, but we ensure type safety
     return {
-      name: data.name || '',
-      headline: data.headline || '',
-      subheadline: data.subheadline || '',
-      heroImage: data.heroImage || { url: '', alt: '' },
+      name: data.name || "",
+      headline: data.headline || "",
+      subheadline: data.subheadline || "",
+      heroImage: data.heroImage || { url: "", alt: "" },
       originalPrice: data.originalPrice || 0,
       discountedPrice: data.discountedPrice || 0,
-      currency: data.currency || '৳',
-      offerText: data.offerText || '',
+      currency: data.currency || "৳",
+      offerText: data.offerText || "",
       sections: data.sections || {
         hero: true,
         problemSolution: true,
@@ -73,16 +84,16 @@ export async function getProduct(): Promise<Product | null> {
       beforeAfter: data.beforeAfter,
       reviews: data.reviews || [],
       faqs: data.faqs || [],
-      brandName: data.brandName || '',
-      whatsappNumber: data.whatsappNumber || '',
-      facebookUrl: data.facebookUrl || '',
+      brandName: data.brandName || "",
+      whatsappNumber: data.whatsappNumber || "",
+      facebookUrl: data.facebookUrl || "",
       codEnabled: data.codEnabled ?? true,
-      codText: data.codText || 'Cash on Delivery Available',
-      freeDeliveryText: data.freeDeliveryText || 'Free Delivery All Over Bangladesh',
-    } as Product
+      codText: data.codText || "Cash on Delivery Available",
+      freeDeliveryText:
+        data.freeDeliveryText || "Free Delivery All Over Bangladesh",
+    } as Product;
   } catch (error) {
-    console.error('Error fetching product from Sanity:', error)
-    return null
+    console.error("Error fetching product from Sanity:", error);
+    return null;
   }
 }
-

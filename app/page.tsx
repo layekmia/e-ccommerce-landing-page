@@ -21,6 +21,7 @@ export default function HomePage() {
   const orderFormRef = useRef<HTMLDivElement>(null);
   const { product, loading, error } = useProduct();
 
+
   const scrollToOrder = () => {
     orderFormRef.current?.scrollIntoView({
       behavior: "smooth",

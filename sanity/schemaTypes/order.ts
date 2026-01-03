@@ -19,13 +19,6 @@ export default defineType({
       type: "string",
       validation: (Rule) => Rule.required(),
     }),
-    {
-      name: "productReference",
-      title: "Product Reference",
-      type: "reference",
-      to: [{ type: "product" }],
-      description: "Optional: Link to the product document",
-    },
     defineField({
       name: "customerName",
       title: "Customer Name",
@@ -124,18 +117,7 @@ export default defineType({
       },
       initialValue: "not_started",
     }),
-    defineField({
-      name: "notes",
-      title: "Notes",
-      type: "text",
-      description: "Internal notes about this order",
-    }),
-    defineField({
-      name: "customerNotes",
-      title: "Customer Notes",
-      type: "text",
-      description: "Any special instructions from the customer",
-    }),
+    defineField({ name: "ipAddress", title: "Ip Address", type: "string" }),
     defineField({
       name: "orderedAt",
       title: "Ordered At",

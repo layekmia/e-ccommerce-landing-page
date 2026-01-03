@@ -16,6 +16,8 @@ interface OrderFormProps {
   product: Product;
 }
 
+const bdPhoneRegex = /^(01)[3-9]\d{8}$/;
+
 export default function OrderForm({ product }: OrderFormProps) {
   const [formData, setFormData] = useState({
     name: "",
@@ -35,12 +37,19 @@ export default function OrderForm({ product }: OrderFormProps) {
       const unitPrice = product.discountedPrice;
       const totalPrice = unitPrice * quantity;
 
+      if (!bdPhoneRegex.test(formData.phone?.trim())) {
+        return toast.error("দয়া করে সঠিক একটি বাংলাদেশি মোবাইল নাম্বার লিখুন।");
+      }
+      if (formData?.address?.length < 15) {
+        return toast.error("দয়া করে সম্পূর্ণ ও সঠিক ঠিকানা লিখুন।");
+      }
+
       // Prepare order data
       const orderData = {
         productName: product.name,
         productReference: "product", // Fixed product ID from Sanity
         customerName: formData.name,
-        customerPhone: formData.phone,
+        customerPhone: formData?.phone?.trim(),
         customerAddress: formData.address,
         quantity: quantity,
         unitPrice: unitPrice,
@@ -59,7 +68,6 @@ export default function OrderForm({ product }: OrderFormProps) {
       });
 
       const result = await response.json();
-
       if (!response.ok) {
         throw new Error(result.error || "Failed to place order");
       }

@@ -11,7 +11,10 @@ interface HeroProps {
 
 export default function Hero({ product, onOrderClick }: HeroProps) {
   return (
-    <section id="hero" className="relative min-h-screen pt-10 flex items-center bg-gradient-to-br from-amber-50 via-white to-rose-50 py-12 md:py-20 px-4 scroll-mt-20">
+    <section
+      id="hero"
+      className="relative min-h-screen pt-10 flex items-center bg-gradient-to-br from-amber-50 via-white to-rose-50 py-12 md:py-20 px-4 scroll-mt-20"
+    >
       <div className="container mx-auto max-w-7xl">
         <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
           {/* Left Content */}
@@ -22,15 +25,15 @@ export default function Hero({ product, onOrderClick }: HeroProps) {
                 {product.codText}
               </div>
             )}
-            
+
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
               {product.headline}
             </h1>
-            
+
             <p className="text-lg md:text-xl text-gray-700 leading-relaxed">
               {product.subheadline}
             </p>
-            
+
             <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start pt-4">
               <button
                 onClick={onOrderClick}
@@ -40,7 +43,7 @@ export default function Hero({ product, onOrderClick }: HeroProps) {
                 Order Now
               </button>
             </div>
-            
+
             <div className="flex items-center gap-6 pt-4 text-sm text-gray-600 justify-center md:justify-start">
               <div className="flex items-center gap-2">
                 <span className="text-2xl">✓</span>
@@ -48,7 +51,7 @@ export default function Hero({ product, onOrderClick }: HeroProps) {
               </div>
             </div>
           </div>
-          
+
           {/* Right Image */}
           <div className="relative">
             <div className="relative w-full aspect-square max-w-md mx-auto">
@@ -69,4 +72,3 @@ export default function Hero({ product, onOrderClick }: HeroProps) {
     </section>
   );
 }
-

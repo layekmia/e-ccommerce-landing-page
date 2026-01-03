@@ -1,40 +1,39 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import { Product } from '@/types/product'
+import { useEffect, useState } from "react";
+import { Product } from "@/types/product";
 
 /**
  * Client-side hook to fetch product data from Sanity
  */
 export function useProduct() {
-  const [product, setProduct] = useState<Product | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchProduct() {
       try {
-        setLoading(true)
-        const response = await fetch('/api/product')
-        
+        setLoading(true);
+        const response = await fetch("/api/product", { cache: "no-store" });
+
         if (!response.ok) {
-          throw new Error('Failed to fetch product')
+          throw new Error("Failed to fetch product");
         }
-        
-        const data = await response.json()
-        setProduct(data)
-        setError(null)
+
+        const data = await response.json();
+        setProduct(data);
+        setError(null);
       } catch (err) {
-        console.error('Error fetching product:', err)
-        setError(err instanceof Error ? err.message : 'Failed to load product')
+        console.error("Error fetching product:", err);
+        setError(err instanceof Error ? err.message : "Failed to load product");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
 
-    fetchProduct()
-  }, [])
+    fetchProduct();
+  }, []);
 
-  return { product, loading, error }
+  return { product, loading, error };
 }
-

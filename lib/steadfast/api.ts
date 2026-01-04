@@ -37,43 +37,58 @@ export interface SteadfastOrderResponse {
   };
 }
 
-// Create Single Order in Steadfast
+// Create Single Order in Steadfast - NO THROWING ERRORS
 export async function createSteadfastOrder(
   orderData: SteadfastOrderData
-): Promise<SteadfastOrderResponse> {
-  if (!API_KEY || !SECRET_KEY) {
-    throw new Error("Steadfast API keys are not configured");
-  }
-
-  const headers = {
-    "Api-Key": API_KEY,
-    "Secret-Key": SECRET_KEY,
-    "Content-Type": "application/json",
-  };
-
-  console.log("Making request to Steadfast API...");
-
-  const response = await fetch(`${BASE_URL}/create_order`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify(orderData),
-    cache: "no-store",
-  });
-
-  const responseText = await response.text();
-  console.log("Steadfast raw response:", responseText);
-
-  if (!response.ok) {
-    console.error("Steadfast API error response:", responseText);
-    throw new Error(
-      `Steadfast API error (${response.status}): ${responseText}`
-    );
-  }
-
+): Promise<SteadfastOrderResponse | { success: false; error: string }> {
   try {
-    return JSON.parse(responseText);
-  } catch (error) {
-    console.error("Failed to parse Steadfast response:", error);
-    throw new Error("Invalid response from Steadfast API");
+    if (!API_KEY || !SECRET_KEY) {
+      console.error("Steadfast API keys are not configured");
+      return { success: false, error: "Steadfast API keys are not configured" };
+    }
+
+    const headers = {
+      "Api-Key": API_KEY,
+      "Secret-Key": SECRET_KEY,
+      "Content-Type": "application/json",
+    };
+
+    console.log("Making request to Steadfast API...");
+
+    const response = await fetch(`${BASE_URL}/create_order`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(orderData),
+      cache: "no-store",
+    });
+
+    const responseText = await response.text();
+    console.log("Steadfast raw response:", responseText);
+
+    if (!response.ok) {
+      console.error("Steadfast API error response:", responseText);
+      return {
+        success: false,
+        error: `Steadfast API error (${response.status}): ${responseText}`,
+      };
+    }
+
+    try {
+      const result = JSON.parse(responseText);
+
+      // Also check if Steadfast returned an error in their response
+      if (result.status !== 200) {
+        console.error("Steadfast returned error:", result.message);
+        return { success: false, error: result.message };
+      }
+
+      return result;
+    } catch (error) {
+      console.error("Failed to parse Steadfast response:", error);
+      return { success: false, error: "Invalid response from Steadfast API" };
+    }
+  } catch (error: any) {
+    console.error("Unexpected error in createSteadfastOrder:", error);
+    return { success: false, error: error.message };
   }
 }

@@ -1,20 +1,29 @@
 // app/api/sanity-webhook/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { client } from "@/sanity/lib/client";
-import { createSteadfastOrder } from "@/lib/steadfast/api";
+import {
+  createSteadfastOrder,
+  SteadfastOrderResponse,
+} from "@/lib/steadfast/api";
+import { serverClient } from "@/sanity/lib/server-client";
 
 export async function POST(request: NextRequest) {
   console.log("=== WEBHOOK TRIGGERED ===");
 
   try {
-    // 1. Verify webhook signature - USE HEADERS
+    // 1. Verify webhook signature
     const { searchParams } = new URL(request.url);
     const secret = searchParams.get("secret");
 
     if (secret !== process.env.SANITY_WEBHOOK_SECRET) {
-      console.log(searchParams);
-      console.log(secret);
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      console.log("Unauthorized access attempt");
+      // Return 200 to prevent retry even on auth failure
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Unauthorized",
+        },
+        { status: 200 }
+      ); // ⬅️ 200 not 401
     }
 
     console.log("✅ Webhook authenticated successfully");
@@ -22,16 +31,23 @@ export async function POST(request: NextRequest) {
     const payload = await request.json();
     console.log("Webhook payload received");
 
-    // Skip operation check for now - just process the order
     const order = payload;
     console.log(`📦 Processing order: ${order.orderNumber || order._id}`);
     console.log(`Current status: ${order.orderStatus}`);
 
-    // 4. Check if status is "approved"
-    if (order.orderStatus === "approved" && !order.trackingCode) {
+    // CRITICAL: Check if already processed to prevent duplicates
+    if (order.trackingCode || order.orderStatus === "sent_to_courier") {
+      console.log("⚠️ Order already processed, skipping to prevent duplicate");
+      return NextResponse.json({
+        success: true,
+        message: "Order already processed - no duplicate",
+      });
+    }
+
+    // Only process if status is "approved" and no tracking
+    if (order.orderStatus === "approved") {
       console.log("✅ Order approved, sending to courier...");
 
-      // 5. Send to courier
       const courierResult = await sendOrderToSteadfast(order);
 
       return NextResponse.json({
@@ -41,19 +57,22 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    console.log("⚠️ No action needed - order not approved or already sent");
+    console.log("⚠️ No action needed - order not approved");
     return NextResponse.json({
       success: true,
       message: "No action taken",
     });
   } catch (error: any) {
-    console.error("❌ Webhook error:", error);
+    console.error("❌ Webhook error:", error.message);
+
+    // CRITICAL: Return 200 even on error to prevent retry
     return NextResponse.json(
       {
+        success: false,
         error: "Webhook processing failed",
         details: error.message,
       },
-      { status: 500 }
+      { status: 200 } // ⬅️ 200 not 500 - THIS STOPS RETRY
     );
   }
 }
@@ -62,7 +81,6 @@ async function sendOrderToSteadfast(order: any) {
   try {
     console.log("🚚 Preparing data for Steadfast...");
 
-    // Prepare data for Steadfast API
     const steadfastData = {
       invoice: order.orderNumber,
       recipient_name: order.customerName,
@@ -72,23 +90,26 @@ async function sendOrderToSteadfast(order: any) {
       note: `${order.productName} (${order.quantity} pcs) - Order: ${order.orderNumber}`,
       item_description: order.productName,
       total_lot: Number(order.quantity),
-      delivery_type: 0, // 0 = home delivery
+      delivery_type: 0,
     };
 
     console.log("📤 Sending to Steadfast API...");
     const steadfastResponse = await createSteadfastOrder(steadfastData);
-    console.log("✅ Steadfast response received:", steadfastResponse);
+    console.log("✅ Steadfast response received successfully");
+
+    // Cast to SteadfastOrderResponse since we know it's successful
+    const successResponse = steadfastResponse as SteadfastOrderResponse;
 
     // Update order in Sanity with tracking info
     console.log("🔄 Updating Sanity order...");
 
-    await client
+    await serverClient
       .patch(order._id)
       .set({
         orderStatus: "sent_to_courier",
-        trackingCode: steadfastResponse.consignment.tracking_code,
-        consignmentId: steadfastResponse.consignment.consignment_id,
-        courierStatus: steadfastResponse.consignment.status,
+        trackingCode: successResponse.consignment.tracking_code,
+        consignmentId: successResponse.consignment.consignment_id,
+        courierStatus: successResponse.consignment.status,
         sentToCourierAt: new Date().toISOString(),
       })
       .commit();
@@ -97,20 +118,26 @@ async function sendOrderToSteadfast(order: any) {
 
     return {
       success: true,
-      steadfastResponse,
+      steadfastResponse: successResponse,
     };
   } catch (error: any) {
-    console.error("❌ Failed to send order to Steadfast:", error);
+    console.error(
+      "❌ Unexpected error in sendOrderToSteadfast:",
+      error.message
+    );
 
-    // Update order status to show failure
-    await client
+    // Update order status to cancelled
+    await serverClient
       .patch(order._id)
       .set({
-        orderStatus: "courier_failed",
-        note: `Courier error: ${error.message}`,
+        orderStatus: "cancelled",
+        note: `Unexpected error: ${error.message}`,
       })
       .commit();
 
-    throw error;
+    return {
+      success: false,
+      error: error.message,
+    };
   }
 }

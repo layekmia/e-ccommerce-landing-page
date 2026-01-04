@@ -5,10 +5,6 @@ const BASE_URL = "https://portal.packzy.com/api/v1";
 const API_KEY = process.env.STEADFAST_API_KEY;
 const SECRET_KEY = process.env.STEADFAST_SECRET_KEY;
 
-if (!API_KEY || !SECRET_KEY) {
-  console.warn("Steadfast API keys are not configured");
-}
-
 export interface SteadfastOrderData {
   invoice: string;
   recipient_name: string;

@@ -22,13 +22,14 @@ export async function POST(request: NextRequest) {
     // 2. Parse the webhook payload
     const payload = await request.json();
     console.log("Webhook payload received");
+    console.log("Operation type:", payload.operation);
 
-    // 3. Check if this is an order update
+    // 3. ONLY process update operations (but don't return early for others)
     if (payload.operation !== "update") {
-      console.log("❌ Not an update operation, skipping");
+      console.log("⚠️ Not an update operation, skipping - but this is OK");
       return NextResponse.json({
         success: true,
-        message: "Not an update operation",
+        message: "Webhook received (not an update)",
       });
     }
 

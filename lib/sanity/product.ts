@@ -35,14 +35,13 @@ const productQuery = `*[_type == "product" && _id == "product"][0] {
  */
 export async function getProduct(): Promise<Product | null> {
   try {
-    const timestamp = Date.now();
     const data = await client.fetch(
       productQuery,
-      { timestamp },
+      {},
       {
-        cache: "no-store",
-        next: { revalidate: 0 },
-        perspective: "previewDrafts", // Use preview perspective for fresh data
+        // Remove cache: "no-store" and next.revalidate: 0
+        // Add cache tag for revalidation
+        next: { tags: ["product"] },
       }
     );
 

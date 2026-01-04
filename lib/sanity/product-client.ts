@@ -1,11 +1,9 @@
+// hooks/useProduct.ts
 "use client";
 
 import { useEffect, useState } from "react";
 import { Product } from "@/types/product";
 
-/**
- * Client-side hook to fetch product data from Sanity
- */
 export function useProduct() {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -15,7 +13,8 @@ export function useProduct() {
     async function fetchProduct() {
       try {
         setLoading(true);
-        const response = await fetch("/api/product", { cache: "no-store" });
+        // Remove { cache: "no-store" } - let browser cache it
+        const response = await fetch("/api/product");
 
         if (!response.ok) {
           throw new Error("Failed to fetch product");

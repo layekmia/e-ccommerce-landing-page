@@ -17,12 +17,7 @@ export async function ordersFromIPLast24h(ip: string) {
     {
       cache: "no-store",
       next: { revalidate: 0 },
-      perspective: "previewDrafts", // Use preview perspective for fresh data
     }
-  );
-
-  console.log(
-    `[IP Check] IP: ${ip}, Count: ${count}, Time: ${new Date().toISOString()}`
   );
   return count;
 }

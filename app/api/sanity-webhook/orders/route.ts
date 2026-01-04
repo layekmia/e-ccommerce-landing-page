@@ -55,6 +55,13 @@ export async function POST(request: NextRequest) {
         message: "Order sent to courier successfully",
         data: courierResult,
       });
+    } else if (order.orderStatus === "delivered") {
+      await serverClient
+        .patch(order._id)
+        .set({
+          deliveredAt: new Date().toISOString(),
+        })
+        .commit();
     }
 
     console.log("⚠️ No action needed - order not approved");
@@ -109,7 +116,6 @@ async function sendOrderToSteadfast(order: any) {
         orderStatus: "sent_to_courier",
         trackingCode: successResponse.consignment.tracking_code,
         consignmentId: successResponse.consignment.consignment_id,
-        courierStatus: successResponse.consignment.status,
         sentToCourierAt: new Date().toISOString(),
       })
       .commit();
@@ -130,7 +136,7 @@ async function sendOrderToSteadfast(order: any) {
     await serverClient
       .patch(order._id)
       .set({
-        orderStatus: "cancelled",
+        orderStatus: "pending",
         note: `Unexpected error: ${error.message}`,
       })
       .commit();

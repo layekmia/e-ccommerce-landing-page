@@ -102,22 +102,6 @@ export default defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
-      name: "deliveryStatus",
-      title: "Delivery Status",
-      type: "string",
-      options: {
-        list: [
-          { title: "Not Started", value: "not_started" },
-          { title: "In Transit", value: "in_transit" },
-          { title: "Out for Delivery", value: "out_for_delivery" },
-          { title: "Delivered", value: "delivered" },
-          { title: "Failed", value: "failed" },
-        ],
-      },
-      initialValue: "not_started",
-      readOnly: true, // Will be updated by courier
-    }),
-    defineField({
       name: "ipAddress",
       title: "IP Address",
       type: "string",
@@ -144,14 +128,7 @@ export default defineType({
       type: "string",
       readOnly: true,
       initialValue: "steadfast",
-    }),
-    defineField({
-      name: "courierStatus",
-      title: "Courier Status",
-      type: "string",
-      readOnly: true,
-      initialValue: "pending",
-      description: "Status from courier service",
+      description: "Courier service used for delivery",
     }),
     defineField({
       name: "sentToCourierAt",

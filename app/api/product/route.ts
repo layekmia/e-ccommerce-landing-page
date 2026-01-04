@@ -1,5 +1,8 @@
+// app/api/product/route.ts
 import { NextResponse } from "next/server";
 import { getProduct } from "@/lib/sanity/product";
+
+export const revalidate = 3600; // Optional: revalidate every hour
 
 export async function GET() {
   try {

@@ -25,9 +25,6 @@ export async function POST(request: NextRequest) {
     // Since you only have one product with _id == "product"
     revalidateTag("product", "product"); // tag, profile
 
-    // Also revalidate homepage
-    revalidateTag("product", "page");
-
     return NextResponse.json({
       success: true,
       revalidatedAt: new Date().toISOString(),

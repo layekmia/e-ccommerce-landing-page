@@ -81,20 +81,3 @@ export async function createSteadfastOrder(
     throw new Error("Invalid response from Steadfast API");
   }
 }
-
-// Check Status by Invoice (optional)
-// export async function getStatusByInvoice(invoice: string): Promise<any> {
-//   const headers = {
-//     "Api-Key": API_KEY,
-//     "Secret-Key": SECRET_KEY,
-//     "Content-Type": "application/json",
-//   };
-
-//   const response = await fetch(`${BASE_URL}/status_by_invoice/${invoice}`, {
-//     method: "GET",
-//     headers,
-//     cache: "no-store",
-//   });
-
-//   return response.json();
-// }

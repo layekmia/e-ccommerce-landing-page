@@ -1,10 +1,10 @@
-import { client } from "@/sanity/lib/client";
+import { sanityFetch } from "@/sanity/lib/fetchProductClient";
 import { Product } from "@/types/product";
 
 /**
  * GROQ query to fetch product data from Sanity
  */
-const productQuery = `*[_type == "product" && _id == "product"][0] {
+const query = `*[_type == "product" && _id == "product"][0] {
   _id,
   name,
   headline,
@@ -35,15 +35,11 @@ const productQuery = `*[_type == "product" && _id == "product"][0] {
  */
 export async function getProduct(): Promise<Product | null> {
   try {
-    const data = await client.fetch(
-      productQuery,
-      {},
-      {
-        // Remove cache: "no-store" and next.revalidate: 0
-        // Add cache tag for revalidation
-        next: { tags: ["product"] },
-      }
-    );
+    const data = await sanityFetch({
+      query,
+      tags: ["product"],
+      profile: "product",
+    });
 
     if (!data) {
       console.warn(

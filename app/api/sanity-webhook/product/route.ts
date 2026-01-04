@@ -5,31 +5,36 @@ import { revalidateTag } from "next/cache";
 export async function POST(request: NextRequest) {
   try {
     // Verify secret
-    const { searchParams } = new URL(request.url);
-    const secret = searchParams.get("secret");
+    const secret = request.nextUrl.searchParams.get("secret");
+    const expectedSecret = process.env.SANITY_WEBHOOK_SECRET;
 
-    if (secret !== process.env.SANITY_WEBHOOK_SECRET) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 200 });
+    if (!expectedSecret) {
+      return NextResponse.json(
+        { error: "Server misconfiguration" },
+        { status: 500 }
+      );
     }
 
-    console.log("🔄 Product updated - revalidating cache");
+    if (secret !== expectedSecret) {
+      return NextResponse.json({ error: "Invalid secret" }, { status: 401 });
+    }
 
-    // Clear cache for product tag on homepage route
-    revalidateTag("product", "/"); // Add the route as second argument
+    const body = await request.json();
+    console.log("Product webhook triggered:", body._id);
 
-    // Also revalidate the API route if needed
-    revalidateTag("product", "/api/product");
+    // Since you only have one product with _id == "product"
+    revalidateTag("product", "product"); // tag, profile
+
+    // Also revalidate homepage
+    revalidateTag("product", "page");
 
     return NextResponse.json({
       success: true,
+      revalidatedAt: new Date().toISOString(),
       message: "Product cache cleared",
-      time: new Date().toISOString(),
     });
-  } catch (error: any) {
-    console.error("Webhook error:", error.message);
-    return NextResponse.json(
-      { success: false, error: error.message },
-      { status: 200 }
-    );
+  } catch (err: any) {
+    console.error("Webhook error:", err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

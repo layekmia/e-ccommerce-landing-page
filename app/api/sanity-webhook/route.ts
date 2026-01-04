@@ -8,15 +8,10 @@ export async function POST(request: NextRequest) {
 
   try {
     // 1. Verify webhook signature - USE HEADERS
-    const webhookSecret =
-      request.headers.get("x-webhook-secret") ||
-      request.headers.get("x-sanity-secret");
+    const { searchParams } = new URL(request.url);
+    const secret = searchParams.get("secret");
 
-    console.log("Received secret header:", webhookSecret);
-    console.log("Expected secret:", process.env.SANITY_WEBHOOK_SECRET);
-
-    if (webhookSecret !== process.env.SANITY_WEBHOOK_SECRET) {
-      console.error("Webhook unauthorized");
+    if (secret !== process.env.SANITY_WEBHOOK_SECRET) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
 
     if (secret !== process.env.SANITY_WEBHOOK_SECRET) {
       console.log(searchParams);
-      console.log(secret)
+      console.log(secret);
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

@@ -53,8 +53,6 @@ export async function createSteadfastOrder(
       "Content-Type": "application/json",
     };
 
-    console.log("Making request to Steadfast API...");
-
     const response = await fetch(`${BASE_URL}/create_order`, {
       method: "POST",
       headers,
@@ -63,7 +61,6 @@ export async function createSteadfastOrder(
     });
 
     const responseText = await response.text();
-    console.log("Steadfast raw response:", responseText);
 
     if (!response.ok) {
       console.error("Steadfast API error response:", responseText);

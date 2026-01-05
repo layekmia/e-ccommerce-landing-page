@@ -1,4 +1,4 @@
-import { sanityFetch } from "@/sanity/lib/fetchProductClient";
+import { client } from "@/sanity/lib/client";
 import { Product } from "@/types/product";
 
 /**
@@ -35,11 +35,7 @@ const query = `*[_type == "product" && _id == "product"][0] {
  */
 export async function getProduct(): Promise<Product | null> {
   try {
-    const data = await sanityFetch({
-      query,
-      tags: ["product"],
-      profile: "product",
-    });
+    const data = await client.fetch(query);
 
     if (!data) {
       console.warn(

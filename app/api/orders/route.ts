@@ -1,6 +1,7 @@
+// app/api/orders/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { createOrder } from "@/lib/sanity/order";
-import { ordersFromIPLast24h } from "@/lib/sanity/ipAddress";
+import { checkOrderLimits } from "@/lib/sanity/orderCheck";
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,21 +10,9 @@ export async function POST(request: NextRequest) {
       request.headers.get("x-real-ip") ||
       "unknown";
 
-    const ipOrderCount = await ordersFromIPLast24h(ip);
-
-    if (ipOrderCount >= 1) {
-      return NextResponse.json(
-        {
-          error:
-            "আপনি ২৪ ঘন্টার মধ্যে ১ টি অর্ডার করেছেন। আরো অর্ডার করতে চাইলে আমাদের হেল্পলাইন (01794700226) এ কল করুন।",
-        },
-        { status: 429 }
-      );
-    }
-
     const body = await request.json();
 
-    // Validate required fields
+    // Validate required fields FIRST (before making Sanity calls)
     const requiredFields = [
       "productName",
       "customerName",
@@ -60,10 +49,28 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check BOTH IP and Phone number limits
+    const { isLimited, message, ipOrders, phoneOrders } =
+      await checkOrderLimits(ip, body.customerPhone);
+
+    if (isLimited) {
+      return NextResponse.json(
+        {
+          error: message,
+          details: {
+            ipOrders,
+            phoneOrders,
+            ip: ip,
+            phone: body.customerPhone,
+          },
+        },
+        { status: 429 }
+      );
+    }
+
     // Create order in Sanity
     const result = await createOrder({
       productName: body.productName,
-      productReference: body.productReference || undefined,
       customerName: body.customerName,
       customerPhone: body.customerPhone,
       customerAddress: body.customerAddress,

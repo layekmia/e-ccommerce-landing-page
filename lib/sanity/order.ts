@@ -57,14 +57,7 @@ export async function createOrder(orderData: CreateOrderData) {
       currency: orderData.currency,
       paymentMethod: orderData.paymentMethod || "cod",
       orderStatus: "pending",
-      deliveryStatus: "not_started",
       orderedAt: now,
-      ...(orderData.productReference && {
-        productReference: {
-          _type: "reference",
-          _ref: orderData.productReference,
-        },
-      }),
       ipAddress: orderData.ipAddress,
     };
 

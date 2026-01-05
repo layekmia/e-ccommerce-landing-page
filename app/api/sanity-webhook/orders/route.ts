@@ -7,15 +7,12 @@ import {
 import { serverClient } from "@/sanity/lib/server-client";
 
 export async function POST(request: NextRequest) {
-  console.log("=== WEBHOOK TRIGGERED ===");
-
   try {
     // 1. Verify webhook signature
     const { searchParams } = new URL(request.url);
     const secret = searchParams.get("secret");
 
     if (secret !== process.env.SANITY_WEBHOOK_SECRET) {
-      console.log("Unauthorized access attempt");
       // Return 200 to prevent retry even on auth failure
       return NextResponse.json(
         {
@@ -26,18 +23,11 @@ export async function POST(request: NextRequest) {
       ); // ⬅️ 200 not 401
     }
 
-    console.log("✅ Webhook authenticated successfully");
-
     const payload = await request.json();
-    console.log("Webhook payload received");
-
     const order = payload;
-    console.log(`📦 Processing order: ${order.orderNumber || order._id}`);
-    console.log(`Current status: ${order.orderStatus}`);
 
     // CRITICAL: Check if already processed to prevent duplicates
     if (order.trackingCode || order.orderStatus === "sent_to_courier") {
-      console.log("⚠️ Order already processed, skipping to prevent duplicate");
       return NextResponse.json({
         success: true,
         message: "Order already processed - no duplicate",
@@ -46,8 +36,6 @@ export async function POST(request: NextRequest) {
 
     // Only process if status is "approved" and no tracking
     if (order.orderStatus === "approved") {
-      console.log("✅ Order approved, sending to courier...");
-
       const courierResult = await sendOrderToSteadfast(order);
 
       return NextResponse.json({
@@ -55,16 +43,7 @@ export async function POST(request: NextRequest) {
         message: "Order sent to courier successfully",
         data: courierResult,
       });
-    } else if (order.orderStatus === "delivered") {
-      await serverClient
-        .patch(order._id)
-        .set({
-          deliveredAt: new Date().toISOString(),
-        })
-        .commit();
     }
-
-    console.log("⚠️ No action needed - order not approved");
     return NextResponse.json({
       success: true,
       message: "No action taken",
@@ -86,8 +65,6 @@ export async function POST(request: NextRequest) {
 
 async function sendOrderToSteadfast(order: any) {
   try {
-    console.log("🚚 Preparing data for Steadfast...");
-
     const steadfastData = {
       invoice: order.orderNumber,
       recipient_name: order.customerName,
@@ -100,15 +77,12 @@ async function sendOrderToSteadfast(order: any) {
       delivery_type: 0,
     };
 
-    console.log("📤 Sending to Steadfast API...");
     const steadfastResponse = await createSteadfastOrder(steadfastData);
-    console.log("✅ Steadfast response received successfully");
 
     // Cast to SteadfastOrderResponse since we know it's successful
     const successResponse = steadfastResponse as SteadfastOrderResponse;
 
     // Update order in Sanity with tracking info
-    console.log("🔄 Updating Sanity order...");
 
     await serverClient
       .patch(order._id)
@@ -120,7 +94,7 @@ async function sendOrderToSteadfast(order: any) {
       })
       .commit();
 
-    console.log("🎉 Order sent to courier successfully!");
+    console.log("Order sent to courier successfully!");
 
     return {
       success: true,

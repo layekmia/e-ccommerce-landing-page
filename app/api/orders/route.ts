@@ -3,6 +3,39 @@ import { NextRequest, NextResponse } from "next/server";
 import { createOrder } from "@/lib/sanity/order";
 import { checkOrderLimits } from "@/lib/sanity/orderCheck";
 
+// Helper function to send email notification (fire and forget)
+async function sendOrderEmailNotification(orderData: any) {
+  try {
+    // Use absolute URL to avoid CORS issues
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "";
+
+    const response = await fetch(`${baseUrl}/api/email_notification`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: orderData.customerName,
+        phone: orderData.customerPhone,
+        address: orderData.customerAddress,
+        quantity: orderData.quantity,
+        totalPrice: orderData.totalPrice,
+        orderNumber: orderData.orderNumber,
+        productName: orderData.productName,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error("Email API responded with error:", response.status);
+    } else {
+      console.log("✅ Order notification email sent");
+    }
+  } catch (error) {
+    console.error("Email notification failed (non-critical):", error);
+    // Don't throw - email failure shouldn't fail the order
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const ip =
@@ -80,6 +113,19 @@ export async function POST(request: NextRequest) {
       currency: body.currency,
       paymentMethod: body.paymentMethod || "cod",
       ipAddress: ip,
+    });
+
+    // Send email notification ASYNC (don't await - fire and forget)
+    sendOrderEmailNotification({
+      customerName: body.customerName,
+      customerPhone: body.customerPhone,
+      customerAddress: body.customerAddress,
+      quantity: body.quantity,
+      totalPrice: body.totalPrice,
+      orderNumber: result.orderNumber,
+      productName: body.productName,
+    }).catch((err) => {
+      console.error("Background email error (ignored):", err);
     });
 
     return NextResponse.json(

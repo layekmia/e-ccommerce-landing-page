@@ -71,7 +71,7 @@ export default function OrderForm({ product }: OrderFormProps) {
       if (!response.ok) {
         throw new Error(result.error || "Failed to place order");
       }
-
+      
       // Reset form on success
       setFormData({
         name: "",
